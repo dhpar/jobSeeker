@@ -1,9 +1,9 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
+class _NoopDB:
+    def init_app(self, _app):
+        return None
+
+    def create_all(self):
+        return None
 
 
-class Base(DeclarativeBase):
-    pass
-
-
-db = SQLAlchemy(model_class=Base)
+db = _NoopDB()

@@ -1,15 +1,9 @@
 import pytest
+from fastapi.testclient import TestClient
 
-from app.app import create_app
-
-
-@pytest.fixture
-def app():
-    app = create_app('testing')
-    app.config.update({"TESTING": True})
-    yield app
+from app.app import app
 
 
 @pytest.fixture
-def client(app):
-    return app.test_client()
+def client():
+    return TestClient(app)

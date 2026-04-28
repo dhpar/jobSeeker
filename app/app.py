@@ -1,28 +1,52 @@
-from flask import Flask
-from app.config.config import get_config_by_name
-from app.initialize_functions import initialize_route, initialize_db, initialize_swagger
+from modules.main.route import main_router
+from fastapi import FastAPI, BackgroundTasks
+from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
+import os
+import json
 
-def create_app(config=None) -> Flask:
-    """
-    Create a Flask application.
+def run_spider():
+    """Function to run the Scrapy spider."""
+    settings = get_project_settings()
+    process = CrawlerProcess(settings)
+    process.crawl(MySpider)
+    process.start() # The script will block here until crawl is finished
 
-    Args:
-        config: The configuration object to use.
 
-    Returns:
-        A Flask application instance.
-    """
-    app = Flask(__name__)
-    if config:
-        app.config.from_object(get_config_by_name(config))
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title="Job Seeker API",
+        version="1.0.0",
+        docs_url="/docs",
+        redoc_url="/redoc",
+    )
+    app.include_router(main_router)
 
-    # Initialize extensions
-    initialize_db(app)
-
-    # Register blueprints
-    initialize_route(app)
-
-    # Initialize Swagger
-    initialize_swagger(app)
+    @app.get("/scrape")
+    async def scrape_data(background_tasks: BackgroundTasks):
+        """
+        Endpoint to activate the scraping process.
+        Runs the spider in a background task.
+        """
+        background_tasks.add_task(run_spider)
+        return { "status": "Scraping activated in the background" }
+    
+    @app.get("/get-data")
+    def get_scraped_data():
+        """
+        Endpoint to retrieve the last scraped data.
+        """
+        if os.path.exists("output.json"):
+            with open("output.json", "r") as f:
+                data = json.load(f)
+            return {"data": data}
+        return {"status": "No data found, run /scrape first"}
+    
+    @app.get("/")
+    def root():
+        return {"message": "API is running", "docs": "/docs"}
 
     return app
+
+app = create_app()
+from app.spiders.spider import MySpider

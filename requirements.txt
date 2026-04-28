@@ -1,6 +1,7 @@
-Flask
-Flask-SQLAlchemy
+fastapi
+uvicorn[standard]
 python-dotenv
 pytest
-gunicorn
-flasgger
+httpx
+scrapy 
+twisted
