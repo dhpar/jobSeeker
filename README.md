@@ -1,6 +1,6 @@
 # Jobseeker
 
-Jobseeker is a FastAPI + Scrapy application for scraping job listings, aggregating job data, and exposing a job-seeker API. The project is designed to locate job postings that match a specific candidate profile and can be extended to cross-reference resumes and track jobs.
+FastAPI + Scrapy application that scrapes job listings, aggregates postings, and matches them against a candidate profile via API. The project is designed to locate job postings that match a specific candidate profile and can be extended to cross-reference resumes and track jobs.
 
 ## Project Overview
 
