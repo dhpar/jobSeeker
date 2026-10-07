@@ -4,6 +4,7 @@ from scrapy.crawler import CrawlerProcess
 from app.spiders.spider import MySpider
 from app.modules.main.route import main_router
 from fastapi import FastAPI, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 from scrapy.utils.project import get_project_settings
 import os
 import json
@@ -24,6 +25,22 @@ def create_app() -> FastAPI:
         redoc_url="/redoc",
     )
     app.include_router(main_router)
+
+    origins = [
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ORIGINS",
+            "http://localhost:5173,http://127.0.0.1:5173",
+        ).split(",")
+        if origin.strip()
+    ]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     @app.get("/scrape")
     async def scrape_data(background_tasks: BackgroundTasks):

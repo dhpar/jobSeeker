@@ -1,4 +1,3 @@
-python
 """jobwatch.py: pull public job feeds, filter, show only new matches."""
 import html
 import re
@@ -7,6 +6,7 @@ import time
 from itertools import chain
 
 import requests  # pip install requests
+from scrapy import Spider
 
 HEADERS = {"User-Agent": "jobwatch/0.1 (personal job search script)"}
 TIMEOUT = 15
@@ -100,3 +100,39 @@ def matches(job):
         and LOCATION_RE.search(job["location"])
         and STACK_RE.search(job["text"])
     )
+
+
+def collect_matched_jobs():
+    """Gather all matching jobs from every configured source."""
+    jobs = chain(
+        *(greenhouse(s) for s in GREENHOUSE),
+        *(lever(s) for s in LEVER),
+        *(ashby(s) for s in ASHBY),
+        hn_hiring(),
+    )
+    for job in jobs:
+        if matches(job):
+            yield job
+
+
+class MySpider(Spider):
+    """Scrapy spider: collects matched jobs and writes them to output.json via FEEDS."""
+
+    name = "jobs"
+    custom_settings = {
+        "FEEDS": {
+            "output.json": {
+                "format": "json",
+                "encoding": "utf8",
+                "indent": 4,
+                "overwrite": True,
+            }
+        }
+    }
+
+    async def start(self):
+        for job in collect_matched_jobs():
+            yield job
+
+    def parse(self, response):
+        return
