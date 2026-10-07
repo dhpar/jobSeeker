@@ -3,8 +3,9 @@
     {
       "name": "Containers: Python - FastAPI",
       "type": "docker",
+      "containerName": "JobSeeker",
       "request": "launch",
-      "preLaunchTask": "Compose build",
+      
       "python": {
         "pathMappings": [
           {
@@ -13,11 +14,6 @@
           }
         ],
         "port": 8888,
-      },
-      "dockerServerReadyAction": {
-        "action": "openExternally",
-        "pattern": "Starting development server at (https?://\\S+|[0-9]+)",
-        "uriFormat": "%s://localhost:%s/docs",
       }
     }
   ]

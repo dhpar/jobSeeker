@@ -1,6 +1,9 @@
-from modules.main.route import main_router
-from fastapi import FastAPI, BackgroundTasks
+import asyncio
+
 from scrapy.crawler import CrawlerProcess
+from app.spiders.spider import MySpider
+from app.modules.main.route import main_router
+from fastapi import FastAPI, BackgroundTasks
 from scrapy.utils.project import get_project_settings
 import os
 import json
@@ -29,16 +32,16 @@ def create_app() -> FastAPI:
         Runs the spider in a background task.
         """
         background_tasks.add_task(run_spider)
-        return { "status": "Scraping activated in the background" }
+        return { "status": "Scraping activated in the background..." }
     
-    @app.get("/get-data")
+    @app.get("/jobs")
     def get_scraped_data():
         """
         Endpoint to retrieve the last scraped data.
         """
         if os.path.exists("output.json"):
-            with open("output.json", "r") as f:
-                data = json.load(f)
+            with open("output.json", "r") as file:
+                data = json.load(file)
             return {"data": data}
         return {"status": "No data found, run /scrape first"}
     
@@ -49,4 +52,3 @@ def create_app() -> FastAPI:
     return app
 
 app = create_app()
-from app.spiders.spider import MySpider
