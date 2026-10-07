@@ -9,6 +9,7 @@ export default defineConfig({
     proxy: {
       '/jobs': 'http://localhost:8888',
       '/scrape': 'http://localhost:8888',
+      '/ws': { target: 'http://localhost:8888', ws: true },
       '/api': 'http://localhost:8888',
       '/docs': 'http://localhost:8888',
       '/openapi.json': 'http://localhost:8888',

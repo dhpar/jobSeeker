@@ -1,11 +1,15 @@
 <script lang="ts">
   import { QueryClientProvider } from '@tanstack/svelte-query'
+  import { onMount } from 'svelte'
   import JobsPage from './lib/components/JobsPage.svelte'
   import ResumePage from './lib/components/ResumePage.svelte'
   import AiSearchPage from './lib/components/AiSearchPage.svelte'
   import { createQueryClient } from './lib/queryClient'
+  import { connectScrapeSocket } from './lib/api/ws'
 
   const queryClient = createQueryClient()
+
+  onMount(() => connectScrapeSocket(queryClient))
 
   type Route = 'jobs' | 'resume' | 'ai-search'
   let route = $state<Route>('jobs')
@@ -18,8 +22,7 @@
 </script>
 
 <QueryClientProvider client={queryClient}>
-  <nav class="border-b border-gray-200 bg-white">
-    <div class="mx-auto flex max-w-7xl gap-1 px-6">
+  <nav class="border-b border-gray-200 bg-white mx-auto flex max-w-7xl gap-1 px-6">
       {#each navItems as item (item.id)}
         <button
           class="border-b-2 px-4 py-3 text-sm font-medium transition-colors {route === item.id
@@ -30,7 +33,7 @@
           {item.label}
         </button>
       {/each}
-    </div>
+    
   </nav>
 
   {#if route === 'jobs'}

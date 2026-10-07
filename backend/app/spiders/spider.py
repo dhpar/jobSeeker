@@ -18,7 +18,7 @@ LEVER = ["company-c"]
 ASHBY = ["company-d"]
 
 TITLE_RE = re.compile(
-    r"\b(full[- ]?stack|front[- ]?end|ai|product engineer|founding engineer)\b", re.I
+    r"^.*(engineer|dev|developer).*$/gmi", re.I
 )
 STACK_RE = re.compile(r"\b(python|react|next\.?js|typescript)\b", re.I)
 LOCATION_RE = re.compile(r"remote|minnesota|minneapolis|st\.? paul|edina", re.I)
@@ -49,7 +49,6 @@ def greenhouse(slug):
             url=j["absolute_url"], text=clean(j.get("content")),
         )
 
-
 def lever(slug):
     data = get_json(f"https://api.lever.co/v0/postings/{slug}", {"mode": "json"})
     if not isinstance(data, list):
@@ -62,7 +61,6 @@ def lever(slug):
             url=j["hostedUrl"], text=j.get("descriptionPlain", ""),
         )
 
-
 def ashby(slug):
     data = get_json(f"https://api.ashbyhq.com/posting-api/job-board/{slug}")
     for j in (data or {}).get("jobs", []):
@@ -74,13 +72,12 @@ def ashby(slug):
             url=j["jobUrl"], text=j.get("descriptionPlain", ""),
         )
 
-
 def hn_hiring():
     q = get_json(
         "https://hn.algolia.com/api/v1/search_by_date",
         {"tags": "story,author_whoishiring", "query": "Who is hiring", "hitsPerPage": 5},
     )
-    hits = [h for h in (q or {}).get("hits", []) if "who is hiring" in h["title"].lower()]
+    hits = [hit for hit in (q or {}).get("hits", []) if "who is hiring" in hit["title"].lower()]
     if not hits:
         return
     thread = get_json(f"https://hn.algolia.com/api/v1/items/{hits[0]['objectID']}")
@@ -93,14 +90,12 @@ def hn_hiring():
                 url=f"https://news.ycombinator.com/item?id={c['id']}", text=text,
             )
 
-
 def matches(job):
     return bool(
         TITLE_RE.search(job["title"])
         and LOCATION_RE.search(job["location"])
         and STACK_RE.search(job["text"])
     )
-
 
 def collect_matched_jobs():
     """Gather all matching jobs from every configured source."""
@@ -114,11 +109,10 @@ def collect_matched_jobs():
         if matches(job):
             yield job
 
-
 class MySpider(Spider):
     """Scrapy spider: collects matched jobs and writes them to output.json via FEEDS."""
-
     name = "jobs"
+    
     custom_settings = {
         "FEEDS": {
             "output.json": {

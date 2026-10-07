@@ -6,8 +6,8 @@ Scrapes job postings (Greenhouse, Lever, Ashby, HN Who's Hiring), matches them a
 
 | Directory   | Contents                                                              |
 | ----------- | --------------------------------------------------------------------- |
-| `backend/`  | FastAPI + Scrapy API: scraping, matching, JSON persistence             |
-| `frontend/` | Svelte + TypeScript + TanStack Query UI with JD filtering              |
+| `backend/`  | FastAPI + Scrapy API: scraping, matching, JSON persistence, WebSocket progress events |
+| `frontend/` | Svelte + TypeScript + TanStack Query UI with JD filtering; auto-refreshes when a scrape finishes |
 
 ## Quick start
 

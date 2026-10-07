@@ -17,6 +17,12 @@ export interface ScrapeResponse {
   status: string
 }
 
+export interface ScrapeEventMessage {
+  event: 'scrape_started' | 'scrape_completed'
+  ok?: boolean
+  error?: string
+}
+
 export interface HealthResponse {
   message: string
   docs: string
