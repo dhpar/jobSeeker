@@ -1,10 +1,11 @@
 import sqlite3
 import uvicorn
 from itertools import chain
+from app.db.db import db_location
 from app.spiders.spider import ASHBY, GREENHOUSE, LEVER, ashby, greenhouse, hn_hiring, lever, matches
 
 def main():
-    db = sqlite3.connect("jobs.db")
+    db = sqlite3.connect(db_location())
     db.execute(
         "CREATE TABLE IF NOT EXISTS seen (url TEXT PRIMARY KEY, company TEXT, "
         "title TEXT, first_seen TEXT DEFAULT CURRENT_TIMESTAMP)"
