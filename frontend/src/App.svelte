@@ -1,3 +1,11 @@
+<script module lang="ts">
+  export const navItems: { id: TRoute; label: string }[] = [
+    { id: 'jobs', label: 'Jobs' },
+    { id: 'resume', label: 'Resume' },
+    { id: 'ai-search', label: 'AI Search' },
+  ]
+</script>
+
 <script lang="ts">
   import { QueryClientProvider } from '@tanstack/svelte-query'
   import { onMount } from 'svelte'
@@ -6,41 +14,20 @@
   import AiSearchPage from './lib/components/AiSearchPage.svelte'
   import { createQueryClient } from './lib/queryClient'
   import { connectScrapeSocket } from './lib/api/ws'
+  import { route, type TRoute } from './lib/components/Header.svelte'
 
   const queryClient = createQueryClient()
 
   onMount(() => connectScrapeSocket(queryClient))
-
-  type Route = 'jobs' | 'resume' | 'ai-search'
-  let route = $state<Route>('jobs')
-
-  const navItems: { id: Route; label: string }[] = [
-    { id: 'jobs', label: 'Jobs' },
-    { id: 'resume', label: 'Resume' },
-    { id: 'ai-search', label: 'AI Search' },
-  ]
+  let page: TRoute = route.page;
 </script>
 
 <QueryClientProvider client={queryClient}>
-  <nav class="border-b border-gray-200 bg-white mx-auto flex max-w-7xl gap-1 px-6">
-      {#each navItems as item (item.id)}
-        <button
-          class="border-b-2 px-4 py-3 text-sm font-medium transition-colors {route === item.id
-            ? 'border-indigo-600 text-indigo-600'
-            : 'border-transparent text-gray-500 hover:text-gray-800'}"
-          onclick={() => (route = item.id)}
-        >
-          {item.label}
-        </button>
-      {/each}
-    
-  </nav>
-
-  {#if route === 'jobs'}
+  {#if page === 'jobs'}
     <JobsPage />
-  {:else if route === 'resume'}
+  {:else if page === 'resume'}
     <ResumePage />
-  {:else if route === 'ai-search'}
+  {:else if page === 'ai-search'}
     <AiSearchPage />
   {/if}
 </QueryClientProvider>

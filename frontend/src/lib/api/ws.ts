@@ -22,6 +22,8 @@ export function connectScrapeSocket(queryClient: QueryClient): () => void {
       scrapeFinished(ok, message.error)
       if (ok) {
         queryClient.invalidateQueries({ queryKey: jobKeys.all })
+      } else {
+        console.error('Scrape failed:', message.error)
       }
     }
   }
@@ -38,18 +40,18 @@ export function connectScrapeSocket(queryClient: QueryClient): () => void {
 
     socket.onmessage = (event) => {
       try {
-        handleMessage(JSON.parse(event.data) as ScrapeEventMessage)
-      } catch {
-        // ignore malformed messages
+        handleMessage(JSON.parse(event.data) as ScrapeEventMessage);
+      } catch (error) {
+        console.error('Failed to parse scrape event message', error);
       }
     }
 
     socket.onclose = () => {
-      scrapeState.connected = false
-      if (disposed) return
-      const delay = Math.min(1000 * 2 ** attempts, MAX_RETRY_DELAY_MS)
-      attempts += 1
-      window.setTimeout(connect, delay)
+      scrapeState.connected = false;
+      if (disposed) return;
+      const delay = Math.min(1000 * 2 ** attempts, MAX_RETRY_DELAY_MS);
+      attempts += 1;
+      window.setTimeout(connect, delay);
     }
   }
 

@@ -7,6 +7,7 @@
   }
 
   let { jobs }: Props = $props()
+  $inspect(jobs)
 </script>
 
 <div class="space-y-4">

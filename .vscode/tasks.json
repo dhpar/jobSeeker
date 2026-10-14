@@ -10,15 +10,6 @@
         "env": { "NO_COLOR": "1" }
       },
       "isBackground": true,
-      "problemMatcher": {
-        "owner": "vite",
-        "pattern": { "regexp": "^$" },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "[Vv]ite",
-          "endsPattern": "ready in"
-        }
-      },
       "presentation": {
         "reveal": "always",
         "panel": "dedicated",

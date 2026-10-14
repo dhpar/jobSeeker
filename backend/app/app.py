@@ -1,20 +1,14 @@
 import asyncio
-import json
 import os
+from pathlib import Path
 import subprocess
 import sys
 import threading
-from pathlib import Path
-
 from fastapi import FastAPI, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-
 from app.modules.main.route import main_router
 from app.ws import manager
-
-BASE_DIR = Path(__file__).resolve().parents[1]
-OUTPUT_FILE = BASE_DIR / "output.json"
-
+from app.db.db import init_db, select_jobs
 # Held while a scrape runs; released by the background task when it finishes.
 _scrape_lock = threading.Lock()
 
@@ -24,26 +18,44 @@ def run_spider() -> None:
     The Twisted reactor cannot restart in-process and its signal handlers must
     be installed in the main thread, so every scrape gets a fresh process.
     """
-    subprocess.run(
-        [sys.executable, "-m", "app.spiders.run_once"],
-        cwd=BASE_DIR,
-        check=True,
-        timeout=300,
-        env={**os.environ, "PYTHONUNBUFFERED": "1"},
+    current_dir = os.path.dirname(os.path.abspath(__file__)) # path to 'app'
+    backend_dir = os.path.dirname(current_dir)               # path to 'backend'
+    script_path = os.path.join(current_dir, "spiders", "run_once.py")
+    env = os.environ.copy()
+    env["PYTHONPATH"] = backend_dir
+   
+    result = subprocess.run(
+        [sys.executable, script_path], 
+        env=env, 
+        capture_output=True, 
+        text=True
     )
+    
+    print("STDOUT:", result.stdout)
+    if result.stderr:
+        print("STDERR:", result.stderr)
+    # print(result.stdout)
 
 def scrape_and_notify(loop: asyncio.AbstractEventLoop) -> None:
     """Background task: run the spider, then broadcast the result to WS clients."""
     try:
         run_spider()
-        payload = {"event": "scrape_completed", "ok": True}
+        payload = {
+            "event": "scrape_completed", 
+            "ok": True
+        }
     except Exception as exc:
-        payload = {"event": "scrape_completed", "ok": False, "error": str(exc)}
+        payload = {
+            "event": "scrape_completed", 
+            "ok": False, 
+            "error": str(exc)
+        }
     finally:
         _scrape_lock.release()
     asyncio.run_coroutine_threadsafe(manager.broadcast(payload), loop)
 
 def create_app() -> FastAPI:
+    init_db()
     app = FastAPI(
         title="Job Seeker API",
         version="1.0.0",
@@ -51,12 +63,12 @@ def create_app() -> FastAPI:
         redoc_url="/redoc",
     )
     app.include_router(main_router)
-
+    port="5173"
     origins = [
         origin.strip()
         for origin in os.getenv(
             "CORS_ORIGINS",
-            "http://localhost:5173,http://127.0.0.1:5173",
+            f"http://localhost:{port},http://0.0.0.0:{port}",
         ).split(",")
         if origin.strip()
     ]
@@ -86,11 +98,13 @@ def create_app() -> FastAPI:
         """
         Endpoint to retrieve the last scraped data.
         """
-        if OUTPUT_FILE.exists():
-            with open(OUTPUT_FILE, "r", encoding="utf8") as file:
-                data = json.load(file)
-            return {"data": data}
-        return {"status": "No data found, run /scrape first"}
+        try:
+            jobs = select_jobs()
+            print(jobs)
+            if jobs: 
+                return jobs
+        except websocket_endpoint:
+            return {"status": "No data found, run /scrape first"}
 
     @app.websocket("/ws")
     async def websocket_endpoint(websocket: WebSocket):
@@ -109,3 +123,6 @@ def create_app() -> FastAPI:
     return app
 
 app = create_app()
+
+if __name__ == "__main__":
+    run_spider()

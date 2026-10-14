@@ -6,40 +6,43 @@
   import { filterJobs } from '../search'
     import Header from './Header.svelte';
 
-  const jobsQuery = useJobsQuery()
-  const filters = getFilters()
+  const { data, isPending, isError, error} = useJobsQuery();
+
+  const filters = getFilters();
 
   const filteredJobs = $derived(
-    jobsQuery.data ? filterJobs(jobsQuery.data.data ?? [], filters) : [],
-  )
+    data ? filterJobs(data ?? [], filters) : [],
+  );
+  
+  console.log($inspect(data));
 </script>
 
-<div class="flex min-h-screen flex-col px-6 py-4 gap-6 bg-gray-50">
-  <Header />
+<Header />
 
-  <main class="flex flex-1 gap-6 mx-auto max-w-7xl">
-    <aside class="w-72 shrink-0">
+<div class="flex min-h-screen flex-col px-6 py-4 gap-6 bg-slate">
+  <main class="flex flex-1 gap-6 mx-auto w-full">
+    <aside class="w-1/4 shrink-0">
       <FilterPanel />
     </aside>
 
-    <section class="flex-1">
-      {#if jobsQuery.isPending}
-        <div class="rounded-lg border border-gray-200 bg-white p-8 text-center text-gray-500">
+    <section class="w-3/4 flex-1">
+      {#if isPending}
+        <div class="rounded-lg border border-slate bg-turquoise-green p-8 text-center text-gray-500">
           Loading jobs...
         </div>
-      {:else if jobsQuery.isError}
+      {:else if isError}
         <div class="rounded-lg border border-red-200 bg-red-50 p-8 text-center text-red-700">
-          Failed to load jobs: {jobsQuery.error.message}
+          Failed to load jobs: {error.message}
         </div>
-      {:else if filteredJobs.length === 0}
-        <div class="rounded-lg border border-gray-200 bg-white p-8 text-center text-gray-500">
-          {(jobsQuery.data?.data ?? []).length === 0
+      {:else if filteredJobs.length === 0 || filterJobs === null}
+        <div class="rounded-lg border border-slate bg-turquoise-green p-8 text-center text-gray-500">
+          {(data ?? []).length === 0
             ? 'No jobs scraped yet. Click "Run Scrape" to fetch listings.'
             : 'No jobs match the current filters.'}
         </div>
       {:else}
         <div class="mb-3 text-sm text-gray-500">
-          {filteredJobs.length} of {jobsQuery.data?.data?.length ?? 0} jobs
+          {filteredJobs.length} of {data?.length ?? 0} jobs
         </div>
         <JobList jobs={filteredJobs} />
       {/if}

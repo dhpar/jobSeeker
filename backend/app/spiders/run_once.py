@@ -4,14 +4,15 @@ A separate process gets its own Twisted reactor (the reactor cannot restart
 inside the API server) and runs in the main thread, so signal handlers install
 cleanly. Invoked as: python -m app.spiders.run_once (cwd must be backend/).
 """
+import os
+import sys
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
-from app.spiders.spider import MySpider
+from spider import MySpider, collect_matched_jobs
+# from db import insert_job
 
 def main():
+    print("reached")
     process = CrawlerProcess(get_project_settings())
     process.crawl(MySpider)
     process.start()
-
-if __name__ == "__main__":
-    main()

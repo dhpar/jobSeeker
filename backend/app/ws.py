@@ -1,7 +1,6 @@
 """WebSocket connection manager for scrape progress events."""
 from fastapi import WebSocket
 
-
 class ConnectionManager:
     def __init__(self):
         self._connections: list[WebSocket] = []

@@ -7,7 +7,7 @@
 
   let { job }: Props = $props()
   let expanded = $state(false)
-
+  $inspect(job);
   const snippet = $derived(job.text.length > 240 && !expanded ? job.text.slice(0, 240) + '...' : job.text)
 </script>
 

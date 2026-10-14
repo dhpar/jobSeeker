@@ -1,12 +1,13 @@
 """jobwatch.py: pull public job feeds, filter, show only new matches."""
+from datetime import datetime
 import html
 import re
-import sqlite3
 import time
 from itertools import chain
-
-import requests  # pip install requests
+import requests
 from scrapy import Spider
+from sys import path
+from app.db.db import insert_jobs
 
 HEADERS = {"User-Agent": "jobwatch/0.1 (personal job search script)"}
 TIMEOUT = 15
@@ -18,10 +19,16 @@ LEVER = ["company-c"]
 ASHBY = ["company-d"]
 
 TITLE_RE = re.compile(
-    r"^.*(engineer|dev|developer).*$/gmi", re.I
+    r'(?=[^.]*\b(?:engineer|dev(?:eloper)?|react|typescript|next)\b)'
+    r'(?=[^.]*\bremote\b|(?=[^.]*\b(?:minnesota|mn)\b)(?=[^.]*\bhibrid\b))'
+    r'[^.]+',
+    re.IGNORECASE,
 )
+
 STACK_RE = re.compile(r"\b(python|react|next\.?js|typescript)\b", re.I)
-LOCATION_RE = re.compile(r"remote|minnesota|minneapolis|st\.? paul|edina", re.I)
+MINNESOTA_RE = re.compile(r"minnesota|minneapolis|st\.? paul|edina", re.IGNORECASE)
+HIBRID_RE = re.compile(r'\bhibrid\b', re.IGNORECASE)
+REMOTE_RE = re.compile(r'\bremote\b', re.IGNORECASE)
 
 def get_json(url, params=None):
     try:
@@ -86,14 +93,14 @@ def hn_hiring():
         if text:
             # HN comments start with "Company | Role | Location"
             yield dict(
-                source="hn", company=text[:40], title=text[:120], location=text[:200],
+                source="hn", company=text[:40], title=text[:120], location=text[:200], first_seen=datetime.now(),
                 url=f"https://news.ycombinator.com/item?id={c['id']}", text=text,
             )
 
 def matches(job):
     return bool(
         TITLE_RE.search(job["title"])
-        and LOCATION_RE.search(job["location"])
+        and ((MINNESOTA_RE.search(job["location"]) and HIBRID_RE.search(job["location"])) or REMOTE_RE.search(job["location"]))
         and STACK_RE.search(job["text"])
     )
 
@@ -112,19 +119,12 @@ def collect_matched_jobs():
 class MySpider(Spider):
     """Scrapy spider: collects matched jobs and writes them to output.json via FEEDS."""
     name = "jobs"
-    
-    custom_settings = {
-        "FEEDS": {
-            "output.json": {
-                "format": "json",
-                "encoding": "utf8",
-                "indent": 4,
-                "overwrite": True,
-            }
-        }
-    }
+    print("scraping...")
+    jobs = collect_matched_jobs()
+    insert_jobs(jobs)
 
     async def start(self):
+        print("adding to db...")
         for job in collect_matched_jobs():
             yield job
 

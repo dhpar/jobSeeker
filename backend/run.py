@@ -1,14 +1,13 @@
 import sqlite3
+from fastapi import logger
 import uvicorn
 from itertools import chain
 from app.spiders.spider import ASHBY, GREENHOUSE, LEVER, ashby, greenhouse, hn_hiring, lever, matches
+from app.db.db import init_db, insert_job
 
 def main():
-    db = sqlite3.connect("jobs.db")
-    db.execute(
-        "CREATE TABLE IF NOT EXISTS seen (url TEXT PRIMARY KEY, company TEXT, "
-        "title TEXT, first_seen TEXT DEFAULT CURRENT_TIMESTAMP)"
-    )
+    init_db()
+
     jobs = chain(
         *(greenhouse(s) for s in GREENHOUSE),
         *(lever(s) for s in LEVER),
@@ -17,21 +16,12 @@ def main():
     )
     new = []
     for job in jobs:
-        if not matches(job):
-            continue
-        cur = db.execute(
-            "INSERT OR IGNORE INTO seen (url, company, title) VALUES (?, ?, ?)",
-            (job["url"], job["company"], job["title"]),
-        )
-        if cur.rowcount:
-            new.append(job)
-    db.commit()
+        insert_job(job)
 
     for j in new:
         print(f"[{j['source']}] {j['company']} | {j['title'][:80]} | {j['location'][:40]}")
         print(f"  {j['url']}")
     print(f"{len(new)} new matches")
-
 
 if __name__ == "__main__":
     main()

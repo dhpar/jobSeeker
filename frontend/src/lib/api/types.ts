@@ -9,9 +9,7 @@ export interface Job {
   text: string
 }
 
-export interface JobsResponse {
-  data: Job[]
-}
+export type JobsResponse = Job[];
 
 export interface ScrapeResponse {
   status: string
