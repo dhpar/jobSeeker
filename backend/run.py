@@ -2,6 +2,7 @@ import sqlite3
 from fastapi import logger
 import uvicorn
 from itertools import chain
+from app.db.db import db_location
 from app.spiders.spider import ASHBY, GREENHOUSE, LEVER, ashby, greenhouse, hn_hiring, lever, matches
 from app.db.db import init_db, insert_job
 
