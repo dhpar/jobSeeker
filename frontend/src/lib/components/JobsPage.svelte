@@ -6,7 +6,7 @@
   import { filterJobs } from '../search'
     import Header from './Header.svelte';
 
-  const { data, isPending, isError, error} = useJobsQuery();
+  const { data, isPending, isError, error, isFetching} = useJobsQuery();
 
   const filters = getFilters();
 
@@ -20,32 +20,37 @@
 <Header />
 
 <div class="flex min-h-screen flex-col px-6 py-4 gap-6 bg-slate">
-  <main class="flex flex-1 gap-6 mx-auto w-full">
-    <aside class="w-1/4 shrink-0">
-      <FilterPanel />
-    </aside>
-
-    <section class="w-3/4 flex-1">
+  <main class="mx-auto w-full">
       {#if isPending}
-        <div class="rounded-lg border border-slate bg-turquoise-green p-8 text-center text-gray-500">
+        <div class="w-full rounded-lg border border-slate bg-turquoise-green p-8 text-center text-gray-500">
+          Press the button to start to scrape
+        </div>
+      {:else if !data && isFetching}
+        <div class="w-full rounded-lg border border-slate bg-turquoise-green p-8 text-center text-gray-500">
           Loading jobs...
         </div>
       {:else if isError}
-        <div class="rounded-lg border border-red-200 bg-red-50 p-8 text-center text-red-700">
+        <div class="w-full rounded-lg border border-red-200 bg-red-50 p-8 text-center text-red-700">
           Failed to load jobs: {error.message}
         </div>
       {:else if filteredJobs.length === 0 || filterJobs === null}
-        <div class="rounded-lg border border-slate bg-turquoise-green p-8 text-center text-gray-500">
+        <div class="w-full rounded-lg border border-slate bg-turquoise-green p-8 text-center text-gray-500">
           {(data ?? []).length === 0
             ? 'No jobs scraped yet. Click "Run Scrape" to fetch listings.'
             : 'No jobs match the current filters.'}
         </div>
       {:else}
-        <div class="mb-3 text-sm text-gray-500">
-          {filteredJobs.length} of {data?.length ?? 0} jobs
+        <div class="grid grid-cols-4 gap-4 w-full">
+          <div class="w-full col-span-4 font-bold text-lg text-turquoise-green text-end">
+            {filteredJobs.length} of {data?.length ?? 0} jobs
+          </div>
+          <aside class="col-span-1">
+            <FilterPanel />
+          </aside>
+          <section class="col-span-3">
+            <JobList jobs={filteredJobs} />
+          </section>
         </div>
-        <JobList jobs={filteredJobs} />
       {/if}
-    </section>
   </main>
 </div>

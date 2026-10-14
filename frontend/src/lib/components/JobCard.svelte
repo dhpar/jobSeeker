@@ -11,7 +11,7 @@
   const snippet = $derived(job.text.length > 240 && !expanded ? job.text.slice(0, 240) + '...' : job.text)
 </script>
 
-<article class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+<article class="rounded-lg border border-gray-200 bg-turquoise-green p-4 shadow-sm">
   <div class="flex items-start justify-between gap-4">
     <div class="min-w-0">
       <h3 class="truncate text-base font-semibold text-gray-900">{job.title}</h3>
@@ -27,7 +27,7 @@
       href={job.url}
       target="_blank"
       rel="noopener noreferrer"
-      class="shrink-0 rounded-md border border-indigo-600 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
+      class="rounded-md bg-slate px-4 py-2 text-sm font-medium text-turquoise-green border border-solid hover:bg-slate/25 hover:text-slate/90 hover:border-slate/90 disabled:opacity-50"
     >
       Open
     </a>
@@ -37,7 +37,7 @@
 
   {#if job.text.length > 240}
     <button
-      class="mt-2 text-xs font-medium text-indigo-600 hover:underline"
+      class="mt-2 text-md font-medium text-slate/90 hover:underline"
       onclick={() => (expanded = !expanded)}
     >
       {expanded ? 'Show less' : 'Show more'}
