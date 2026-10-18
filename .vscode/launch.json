@@ -15,7 +15,10 @@
       "cwd": "${workspaceFolder}/backend",
       "python": "${workspaceFolder}/.venv/Scripts/python.exe",
       "console": "integratedTerminal",
-      "env": { "PYTHONUNBUFFERED": "1" }
+      "env": { 
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONASYNCIODEBUG": "1"
+      }
     },
     {
       "name": "Backend: full (run.py: scrape + serve)",
@@ -25,7 +28,10 @@
       "cwd": "${workspaceFolder}/backend",
       "python": "${workspaceFolder}/.venv/Scripts/python.exe",
       "console": "integratedTerminal",
-      "env": { "PYTHONUNBUFFERED": "1" }
+      "env": { 
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONASYNCIODEBUG": "1" 
+      }
     },
     {
       "name": "Frontend: Chrome (debug)",

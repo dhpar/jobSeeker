@@ -1,0 +1,23 @@
+[
+	{
+		"source": "greenhouse",
+		"api": "https://boards-api.greenhouse.io/v1/boards/{job_board}/jobs", 
+		"slugs": [
+			"airbnb","anthropic","cloudflare","coinbase","datadog","discord","dropbox","figma","gitlab","instacart","lyft","netlify","stripe","vercel","affirm","airtable","asana","brex","chime","cockroachlabs","contentful","databricks","duolingo","elastic","flexport","gusto","hubspot","lattice","marqeta","mongodb","okta","opendoor","pagerduty","peloton","pinterest","postman","reddit","relativity","ripple","robinhood","samsara","sofi","squarespace","tailscale","toast","twitch","wikimedia","ziprecruiter","algolia","amplitude","axiom","checkr","cribl","doximity","faire","fivetran","forethought","grammarly","boards","greenhouse","api","groww","justworks","kalshi","klaviyo","latitude","masterclass","mattermost","melio","mercury","mixpanel","mutiny","nextdoor","onemedical","pulley","roblox","seatgeek","sendbird","smartsheet","temporal","thumbtack","udemy","webflow","zscaler","abnormalsecurity","adyen","alchemy","allbirds","appian","automox","block","braze","builtin","calm","carta","civicactions","classpass","codepath","contentstack","cortica","coursera","cybereason","dagger","deepmind","descript","dialpad","digit","earnin","ethos","everlaw","everquote","expel","fastly","fellow","figment","fireblocks","five9","flexe","formlabs","godaddy","helloalice","honeybook","horizen","ideo","indeed","instabase","intercom","iterable","ivalua","justanswer","karat","keystone","knowde","legalist","medium","newsela","noredink","nubank","orca","osano","outschool","papaya","payoneer","proof","propel","proton","scaleai","singlestore","spire","stitch","surveymonkey","taboola","taskrabbit","tekion","tigera","tines","traeger","transcarent","tripactions","truework","trustpilot","upstart","verkada","verve","vidyard","vonage","workato","wrike","yext","yotpo","zocdoc","applovin","calendly","circleci","dollarshaveclub","fetch","labelbox","launchdarkly","liveperson","lucidmotors","moveworks","nuro","pendo","salesloft","twilio","veriff","wave","waymo"
+		]
+	},
+	{
+		"source": "hackernews",
+		"api": "https://jobs.ashbyhq.com/",
+		"slugs": [
+			"linear", "notion","revenuecat","clerk","neon","railway","ramp","render","retool","supabase","ashby","braintrust","cohere","deel","drata","freshpaint","helion","juicebox","motion","openai","posthog","replit","snyk","sprig","svix","benchling","clickup","cursor","deepgram","fullstory","golinks","greptile","hightouch","kustomer","oso","paragon","pinecone","podium","primer","reka","runway","sieve","stedi","tldraw","vanta","workos","anyscale","perplexity","creditgenie"
+		]
+	},
+	{
+		"source": "lever",
+		"api": "https://api.lever.co/v0/postings/",
+		"slugs": [
+			"spotify","atlassian","immutable","outreach","plaid","toptal","palantir"
+		]
+	}
+]

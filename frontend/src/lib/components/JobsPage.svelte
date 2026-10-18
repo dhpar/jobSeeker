@@ -22,7 +22,7 @@
 <div class="flex min-h-screen flex-col px-6 py-4 gap-6 bg-slate">
   <main class="mx-auto w-full">
       {#if isPending}
-        <div class="w-full rounded-lg border border-slate bg-turquoise-green p-8 text-center text-gray-500">
+        <div class="w-full rounded-lg border border-slate bg-turquoise-green p-8 text-center text-gray-500 text-lg">
           Press the button to start to scrape
         </div>
       {:else if !data && isFetching}

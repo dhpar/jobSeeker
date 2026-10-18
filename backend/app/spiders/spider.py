@@ -1,22 +1,46 @@
 """jobwatch.py: pull public job feeds, filter, show only new matches."""
+import asyncio
 from datetime import datetime
 import html
 import re
 import time
 from itertools import chain
+import httpx
 import requests
 from scrapy import Spider
 from sys import path
 from app.db.db import insert_jobs
+import json
 
-HEADERS = {"User-Agent": "jobwatch/0.1 (personal job search script)"}
-TIMEOUT = 15
-DELAY = 1.0  # seconds between requests, be polite
+def SPIDER_CONFIG():
+    GREENHOUSE = []
+    LEVER = []
+    ASHBY = []
+    with open("config.json", "r") as file:
+        json_data = json.load(file)
+        for agregator in json_data:
+            if agregator["source"] == 'greenhouse':
+                GREENHOUSE = [agregator['slugs']] 
+            elif agregator["source"] == 'lever':
+                LEVER = [agregator['slugs']]
+            elif agregator["source"] == 'hackernews':
+                ASHBY = [agregator['slugs']]
+    return {
+        'headers': { 
+            "User-Agent": "jobwatch/0.1 (personal job search script)" 
+        },
+        'timeout': 15,
+        'delay': 1.0,
+        'slugs': {
+            'greenhouse': GREENHOUSE,
+            'lever': LEVER,
+            'ashby': ASHBY
+        } 
+    }
 
+
+            
 # Slugs come from the careers page URL. Placeholders below.
-GREENHOUSE = ["company-a", "company-b"]
-LEVER = ["company-c"]
-ASHBY = ["company-d"]
 
 TITLE_RE = re.compile(
     r'(?=[^.]*\b(?:engineer|dev(?:eloper)?|react|typescript|next)\b)'
@@ -30,20 +54,73 @@ MINNESOTA_RE = re.compile(r"minnesota|minneapolis|st\.? paul|edina", re.IGNORECA
 HIBRID_RE = re.compile(r'\bhibrid\b', re.IGNORECASE)
 REMOTE_RE = re.compile(r'\bremote\b', re.IGNORECASE)
 
+def agregate_urls():
+    URLS:list[str] = []
+    with open("config.json", "r") as file:
+        json_data = json.load(file)
+        for agregator in json_data:
+            if agregator["source"] == 'greenhouse':
+                for slug in agregator['slugs']:
+                    URLS.append(
+                        f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs"
+                    ) 
+            elif agregator["source"] == 'lever':
+                for slug in agregator['slugs']:
+                    URLS.append(
+                        f"https://api.lever.co/v0/postings/{slug}"
+                    )
+            elif agregator["source"] == 'hackernews':
+                for slug in agregator['slugs']:
+                    URLS.append(
+                        f"https://api.ashbyhq.com/posting-api/job-board/{slug}"
+                    )
+    return URLS
+    
 def get_json(url, params=None):
     try:
-        r = requests.get(url, params=params, headers=HEADERS, timeout=TIMEOUT)
+        r = requests.get(url, params=params, headers=SPIDER_CONFIG()['headers'], timeout=SPIDER_CONFIG()['timeout'])
         r.raise_for_status()
         return r.json()
     except (requests.RequestException, ValueError) as e:
         print(f"skip {url}: {e}")
         return None
     finally:
-        time.sleep(DELAY)
+        time.sleep(SPIDER_CONFIG()['delay'])
+
+async def agregated_requests():
+    # Limits simultaneous connections to avoid overwhelming the server/your OS
+    limits = httpx.Limits(max_keepalive_connections=5, max_connections=20)
+    URLS = agregate_urls()
+    # Use AsyncClient to keep connections alive across requests
+    async with httpx.AsyncClient(limits=limits) as client:
+        tasks = [fetch_url(client, url) for url in URLS]
         
+        # Gather runs all tasks concurrently
+        results = await asyncio.gather(*tasks)
+        
+        for result in results:
+            yield dict(
+                source="greenhouse", 
+                company=result.slug or 'No company found', 
+                title=result["title"],
+                location=(result.get("location") or {}).get("name", ""),
+                url=j["absolute_url"], text=clean(result.get("content")),
+            )
+            
 def clean(text):
     text = html.unescape(text or "")
     return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", text)).strip()
+
+async def fetch_url(client: httpx.AsyncClient, url: str, slug = ''):
+    response = await client.get(url)
+    return dict(
+        source="greenhouse", 
+        company=response.slug or 'No company found', 
+        title=response["title"],
+        location=response["location"],
+        url=response["absolute_url"], 
+        text=response["content"],
+    )
 
 def greenhouse(slug):
     data = get_json(
@@ -82,18 +159,27 @@ def ashby(slug):
 def hn_hiring():
     q = get_json(
         "https://hn.algolia.com/api/v1/search_by_date",
-        {"tags": "story,author_whoishiring", "query": "Who is hiring", "hitsPerPage": 5},
+        {
+            "tags": "story,author_whoishiring", 
+            "query": "Who is hiring", 
+            "hitsPerPage": 5
+        },
     )
-    hits = [hit for hit in (q or {}).get("hits", []) if "who is hiring" in hit["title"].lower()]
+    hits = [hit for hit in (q or {}).get("hits", []) if "who is hiring" or "Who wants to be hired?" in hit["title"].lower()]
     if not hits:
         return
     thread = get_json(f"https://hn.algolia.com/api/v1/items/{hits[0]['objectID']}")
     for c in (thread or {}).get("children", []):
-        text = clean(c.get("text"))
-        if text:
+        text_bloob = clean(c.get("text"))
+        if text_bloob:
             # HN comments start with "Company | Role | Location"
+            title, position, text = text_bloob.split(' — ')
             yield dict(
-                source="hn", company=text[:40], title=text[:120], location=text[:200], first_seen=datetime.now(),
+                source="hn", 
+                company=text[:40], 
+                title=title, 
+                location=text[:200], 
+                first_seen=datetime.now(),
                 url=f"https://news.ycombinator.com/item?id={c['id']}", text=text,
             )
 
@@ -120,6 +206,7 @@ class MySpider(Spider):
     """Scrapy spider: collects matched jobs and writes them to output.json via FEEDS."""
     name = "jobs"
     print("scraping...")
+    agregated_requests()
     jobs = collect_matched_jobs()
     insert_jobs(jobs)
 
